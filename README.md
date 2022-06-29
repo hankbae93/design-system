@@ -1,46 +1,69 @@
-# Getting Started with Create React App
+# Design-system
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 절대경로 세팅
 
-## Available Scripts
+```zsh
+yarn add @craco/craco
 
-In the project directory, you can run:
+yarn add craco-alias -D
+```
 
-### `yarn start`
+- package.json
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```ts
+{
+	...
+	"scripts": {
+		"start": "craco start",
+		"build": "craco build",
+		"test": "craco test",
+	},
+    ...
+}
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- tsconfig.paths.json
 
-### `yarn test`
+```ts
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "pages/*": ["src/pages/*"],
+      "components/*": ["src/components/*"],
+      "styles/*": ["src/styles/*"]
+    }
+  }
+}
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```ts
+// src/craco.config.js
+const CracoAlias = require("craco-alias");
 
-### `yarn build`
+module.exports = {
+	plugins: [
+		{
+			plugin: CracoAlias,
+			options: {
+				source: "tsconfig",
+				tsConfigPath: "tsconfig.paths.json",
+			},
+		},
+	],
+};
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+두번째로 storybook이 tsconfig의 경로를 참조하지않고 정신을 못차릴 때 해당 플러그인을 설치해주고 .storybook의 main.js를 수정해준다.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```js
+const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+module.exports = {
+	...,
+	webpackFinal: async (config, { configType }) => {
+		config.resolve.plugins = [new TsconfigPathsPlugin()];
+		return config;
+	},
+};
+```
